@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>ScalaCheck</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<style>
+		div.patate-schema {
+			text-align: center;
+
+		}
+		div.patate {
+			border:1px solid white;
+			border-radius: 100%;
+			height:200px;
+			width:200px;
+			margin-left:auto;
+			margin-right:auto;
+			margin-top:20px;
+			margin-bottom:20px;
+		}
+
+		span.patate-label {
+			margin-top:10px;
+			font-weight: bold;
+			display: block;
+			margin-bottom:15px;
+		}
+
+		span.patate-content {
+			font-size: 20px;
+			display:block;
+		}
+
+		div.big-patate {
+			height:600px;
+			width:600px;
+		}
+
+    .pyramid > div {
+      margin:auto;
+      padding:10px 20px;
+    }
+    .pyramid .layer1 {
+      background-color: #FFAE00;
+    }
+    .pyramid .layer2 {
+      background-color: #2AC5AE;
+      width:66%;
+    }
+    .pyramid .layer3 {
+      background-color: #F62E54;
+      width:44%;
+    }
+    .pyramid .layer4 {
+      background-color: #2D7BCB;
+      width:29%;
+    }
+    .pyramid .layer5 {
+      background-color: #FF701A;
+      width:19%;
+    }
+
+    .reveal div.scalacheck-logo {
+      border-radius: 100%;
+      background-color:black;
+      color:white;
+      width:100px;
+      height:100px;
+      line-height:100px;
+      font-size:2.5em;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .reveal .size11 {
+      font-size:1.2em;
+    }
+    .reveal .size12 {
+      font-size:1.3em;
+    }
+		</style>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>ScalaCheck</h1>
+					<h2>Property-Based testing</h2>
+          <div class="scalacheck-logo">∀</div>
+				</section>
+
+        <section>
+          <h1>Qui suis-je&nbsp;?</h1>
+          <ul>
+            <li>Benoît Lemoine</li>
+            <li>Développeur FullStack (Scala / TypeScript) chez Captain&nbsp;Dash</li>
+            <li>@benoit_lemoine</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Parlons tests</h2>
+        </section>
+
+        <section>
+          <h2>C'est quoi un test&nbsp;?</h2>
+          <ul>
+            <li>une <strong class="size11">procédure</strong>...</li>
+            <li class="fragment">...<strong class="size11">automatisé</strong>...</li>
+            <li class="fragment">.. permettant de <strong class="size12">vérifier le bon fonctionnement</strong> d'un programme</li>
+          </ul>
+        </section>
+
+        <section>
+          <blockquote>
+            Testing shows the presence, not the absence of bugs
+          </blockquote>
+          <span style="float:right"><span>Dijkstra.</span></span>
+        </section>
+
+
+        <section>
+          <h2>Exemple</h2>
+<pre><code data-trim class="scala">
+  def add(x:Int, y:Int):Int = if(x > 0 &amp;&amp; y > 0) {
+      x + y
+    } else {
+      x - y
+    }
+</code></pre>
+        </section>
+
+        <section>
+          <h2>Test unitaire</h2>
+          <pre><code data-trim class="scala">
+"add should sum the numbers" in {
+  add(1, 2) shouldBe 3
+  add(123, 0) shouldBe 123
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>ScalaCheck</h2>
+          <ul>
+            <li>Librairie Scala pour faire du test de propriété</li>
+            <li>Utilisable seule</li>
+            <li>Intégrée dans <em>ScalaTest</em> et <em>Specs</em></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Test de propriété</h2>
+          <pre><code class="scala" data-trim>
+import org.scalacheck.Properties
+import org.scalacheck.Prop.forAll
+
+object AddSpecification extends Properties("add") {
+  property("0 should be right neutral") = forAll { (x: Int) =>
+    add(x, 0) == x
+  }
+}
+          </code></pre>
+          <pre class="fragment"><code data-trim>
+            [info] + add.0 should be right neutral: OK, passed 100 tests.
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Ce qu'il se passe en vrai</h2>
+          <pre><code class="scala" data-trim>
+import org.scalacheck.Properties
+import org.scalacheck.Prop.forAll
+import org.scalacheck.Prop.collect
+
+object AddSpecification extends Properties("add") {
+  property("0 should be right neutral") = forAll { (x: Int) =>
+    collect(x) {
+      add(x, 0) == x
+    }
+  }
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Ce qu'il se passe en vrai</h2>
+<pre><code data-trim>
+[info] + add.0 should be right neutral: OK, passed 100 tests.
+[info] > Collected test data:
+[info] 12% 2147483647
+[info] 12% -2147483648
+[info] 10% 0
+[info] 9% 1
+[info] 6% -1
+[info] 1% -1691614918
+[info] 1% 670895397
+...
+[info] 1% 1334365593
+[info] 1% 1694241903
+[info] 1% 425822646
+[info] 1% -97876626
+[info] 1% -625637529
+</code></pre>
+        </section>
+
+        <section>
+          <h2>En cas d'erreur</h2>
+          <pre><code class="scala" data-trim>
+object AddSpecification extends Properties("add") {
+  property("0 should be left neutral") = forAll { (x: Int) =>
+    add(0, x) == x
+  }
+}
+          </code></pre>
+          <pre class="fragment" class="bash"><code data-trim>
+! add.0 should be left neutral: Falsified after 3 passed tests.
+[info] > ARG_0: -1
+[info] > ARG_0_ORIGINAL: -1576258449
+
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Exemple Shrink</h2>
+          <pre><code class="scala" data-trim>
+def pad(str:String, n:Int):String = if(str.length < n) {
+  str.padTo(n, '0')
+}  else {
+  str
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Exemple Shrink</h2>
+          <pre><code class="scala" data-trim>
+property("padded str length should be 10") =forAll {(str: String) =>
+   collect(str) {
+     pad(str, 10).length == 10
+   }
+ }
+          </code></pre>
+          <pre><code class="bash" data-trim style="font-size:0.85em">
+[info] ! add.padded str length should be 10: Falsified after 17 passed tests.
+[info] > ARG_0: "蒨噯穉洽ᄼ嫕ᛊ˕皑"
+[info] > ARG_0_ORIGINAL: "蒨ꎪ뱏㒫ⵏ豙噯穉洽ᄼ嫕ᛊ˕皑"
+[info] > Collected test data:
+[info] 28%
+[info] 6% 纞⥯
+[info] 6% 蒨噯穉洽ᄼ嫕ᛊ˕皑
+...
+[info] 6% 횏㞤㡛
+[info] 6% שּ繏Гဘ욖䇨ࠢ⇱
+[info] 6% 䲫褐ተ鳟
+[info] 6% 㪢癫
+[info] 6% 獒꽺啼᯽鲞浡硝⤜̇
+[info] 6% 洭ॣࡨ盽㶴
+          </code></pre>
+        </section>
+
+        <section>
+					<h2>Autres exemples possibles</h2>
+          <ul>
+            <li><code>deserialize(serialize(myObject)) == myObject</code></li>
+            <li><code>findById(save(entity)) == entity</code></li>
+            <li><code>compress(input).size < input.size</code></li>
+          </ul>
+				</section>
+
+        <section>
+          <h2>Comment ca marche&nbsp;?</h2>
+        </section>
+
+        <section>
+          <h2>Gen</h2>
+<pre><code class="scala" data-trim>
+val genInt:Gen[Int] = Gen.choose(10, 100)
+forAll(genInt) { (x:Int) =>
+  x > 9
+}
+</code></pre>
+        </section>
+
+
+
+
+
+
+        <section>
+          <h2>Créer un Gen</h2>
+          <ul>
+            <li><code>Gen.numStr</code>, <code>Gen.alphaStr</code></li>
+            <li class="fragment"><code>Gen.choose(0, 1000)</code></li>
+            <li class="fragment"><code>Gen.oneOf("A","E","I", "O", "U")</code></li>
+            <li class="fragment"><code>Gen.option(myOtherGen)</code></li>
+            <li class="fragment"><code>Gen.listOf(myOtherGen)</code></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Gen</h2>
+          <pre><code data-trim class="scala">
+val oddGen:Gen[Int] = Gen.choose(0, 1000).suchThat( _ % 2 == 0)
+val anotherOddGen:Gen[Int] = Gen.choose(0, 1000).map(_ + _)
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Gen est monadique</h2>
+          <pre><code data-trim class="scala">
+case class User(id:Int, name:String)
+val genUser:Gen[User] = for {
+  id &lt;- Gen.choose(0, Int.MaxValue)
+  name &lt;- Gen.alphaStr
+} yield User(id, name)
+
+forAll(genUser) { (user:User) =>
+  user.name.length > 0
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Les arbitrary</h2>
+          <pre><code class="scala" data-trim>
+case class User(id:Int, name:String)
+val genUser:Gen[User] = for {
+  id &lt;- Gen.choose(0, Int.MaxValue)
+  name &lt;- Gen.alphaStr
+} yield User(id, name)
+
+implicit val arbUser:Arbitrary[User] = Arbitrary(genUser)
+
+forAll { (user:User) =>
+  user.name.length > 0
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Exemple&nbsp;: <code>java.time.LocalDate</code></h2>
+          <pre><code data-trim class="scala">
+val genLocalDate:Gen[LocalDate] = for {
+  year &lt;- Gen.choose(1980, 2040)
+  month &lt;- Gen.choose(1, 12)
+  day &lt;- Gen.choose(1, Month.of(month).length(Year.isLeap(year)))
+} yield LocalDate.of(year, month, day)
+          </code></pre>
+        </section>
+
+
+				<section>
+					<h2>Flemme et Gen de <code>case class</code></h2>
+          <a href="https://github.com/alexarchambault/scalacheck-shapeless">https://github.com/alexarchambault/scalacheck-shapeless</a>
+          <pre><code data-trim class="scala">
+case class User(id:Int, firstName:String, lastName:String) {
+  def name = firstName + " " + lastName
+}
+
+forAll((user:User) => {
+  user.name.contains(user.firstName)
+})
+          </code></pre>
+				</section>
+
+        <section>
+					<h2>Flemme et Gen d'<code>ADT</code></h2>
+          <a href="https://github.com/alexarchambault/scalacheck-shapeless">https://github.com/alexarchambault/scalacheck-shapeless</a>
+          <pre><code data-trim class="scala">
+sealed trait Planetoid
+case object Mercury extends Planetoid
+case object Venus extends Planetoid
+case class JovianMoon(name:String) extends Planetoid
+
+forAll((planetoid:Planetoid) => {
+  planetoid.toString().length > 0
+})
+          </code></pre>
+				</section>
+
+        <section>
+          <h2>Limites et mise en garde</h2>
+          TODO IMG PANNEAU ATTENTIOn
+        </section>
+
+        <section>
+          <h2>Ne pas recoder la fonction dans le test</h2>
+          <pre><code data-trim class="scala">
+case class User(id:Int, firstName:String, lastName:String) {
+  def name = firstName + " " + lastName
+}
+
+forAll((user:User) => {
+  user.name == firstName + " " + lastName
+})
+          </code></pre>
+
+        </section>
+
+        <section>
+          <h2>Mise en garde</h2>
+          //Problématique de la répartition des cas de tests
+        </section>
+
+
+				<section>
+					<h2>Exemples du vrai monde</h2>
+          <pre><code class="scala" data-trim>
+property("serialize and deserialize should be inverse") = forAll { (user: User) =>
+  Json.toJson(user).asOpt[User] == Some(user)
+}
+property("what's saved in database can be retrieved") = forAll { (user:User) =>
+  User.findById(user.save().id) == Some(user)
+}
+          </code></pre>
+				</section>
+
+        <section>
+          <h2>Exemples du vrai monde</h2>
+          <pre><code class="scala" data-trim>
+property("identity don't modify the functor") = forAll { (response:HttpReponse[String]) =>
+  response.map(identity) == response
+}
+property("functor is associative") = forAll { (response:HttpReponse[String], f1: String => Int, f2:Int => Long) =>
+  response.map(f1).map(f2) == response.map(f1 andThen f2)
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Avec scalaz</h2>
+          <pre><code class="scala" data-trim>
+implicit def responseEqual[A]: Equal[HttpResponse[A]] = Equal.equalA
+implicit val responseFunctor = new Functor[HttpResponse] {
+  def map[A, B](fa: HttpResponse[A])(f: A => B): HttpResponse[B] = fa.map(f)
+}
+
+functor.laws[HttpResponse].check
+          </code></pre>
+        </section>
+
+
+				<section>
+					<h2>Dans les autres langages</h2>
+          <ul>
+            <li>Quickcheck (Haskell)</li>
+            <li>SwiftCheck (Swift)</li>
+            <li>JsVerify (JavaScript)</li>
+            <li>etc.</li>
+          </ul>
+				</section>
+
+        <section>
+          <h2>Bonus&nbsp;: Vérification de propriété par les types</h2>
+          <pre><code data-trim class="haskell">
+          -- Idris
+total plusZeroLeftNeutral : (right : Nat) -> 0 + right = right
+plusZeroLeftNeutral right = Refl
+
+total plusZeroRightNeutral : (left : Nat) -> left + 0 = left
+plusZeroRightNeutral Z     = Refl
+plusZeroRightNeutral (S n) =
+  let inductiveHypothesis = plusZeroRightNeutral n in
+    rewrite inductiveHypothesis in Refl
+    </code></pre>
+        </section>
+
+				<section>
+					<h2>Questions&nbsp;?</h2>
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'convex', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
