@@ -275,7 +275,7 @@ property("padded str length should be 10") =forAll {(str: String) =>
    }
  }
           </code></pre>
-          <pre><code class="bash" data-trim style="font-size:0.85em">
+          <pre class="fragment"><code class="bash" data-trim style="font-size:0.85em">
 [info] ! add.padded str length should be 10: Falsified after 17 passed tests.
 [info] > ARG_0: "蒨噯穉洽ᄼ嫕ᛊ˕皑"
 [info] > ARG_0_ORIGINAL: "蒨ꎪ뱏㒫ⵏ豙噯穉洽ᄼ嫕ᛊ˕皑"
@@ -294,13 +294,41 @@ property("padded str length should be 10") =forAll {(str: String) =>
         </section>
 
         <section>
-					<h2>Autres exemples possibles</h2>
+          <h2>A quoi ca sert&nbsp;?</h2>
           <ul>
+             <li>Tests de propriété algébrique</li>
+             <li>Associativité <code>x ★ (y ★ z) == (x ★ y) ★ z</code></li>
+             <li>Commutativité <code> x ★ y == y ★ x</code></li>
+             <li>Element neutre <code> x ★ e == x</code></li>
+             <li>Element absorbant <code>x ★ e == e</code></li>
+             <li>etc.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Exemple&nbsp;: List est un Functor</h2>
+          <pre><code>
+property("identity") = forAll {(list: List[Long]) =>
+  list.map(identity) == list
+}
+
+property("composite") = forAll {(list: List[Long],
+                                 fn1:Long => String,
+                                 fn2:String => Int) =>
+  list.map(fn1).map(fn2) == list.map(fn1 andThen fn2)
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Exemple</h2>
+          <h3 class="fragment">de la vraie vie</h3>
+          <ul class="fragment">
             <li><code>deserialize(serialize(myObject)) == myObject</code></li>
             <li><code>findById(save(entity)) == entity</code></li>
             <li><code>compress(input).size < input.size</code></li>
           </ul>
-				</section>
+        </section>
 
         <section>
           <h2>Comment ca marche&nbsp;?</h2>
@@ -311,22 +339,17 @@ property("padded str length should be 10") =forAll {(str: String) =>
 <pre><code class="scala" data-trim>
 val genInt:Gen[Int] = Gen.choose(10, 100)
 forAll(genInt) { (x:Int) =>
-  x > 9
+  x > 9 && x < 101
 }
 </code></pre>
         </section>
-
-
-
-
-
 
         <section>
           <h2>Créer un Gen</h2>
           <ul>
             <li><code>Gen.numStr</code>, <code>Gen.alphaStr</code></li>
             <li class="fragment"><code>Gen.choose(0, 1000)</code></li>
-            <li class="fragment"><code>Gen.oneOf("A","E","I", "O", "U")</code></li>
+            <li class="fragment"><code>Gen.oneOf("A", "E", "I", "O", "U")</code></li>
             <li class="fragment"><code>Gen.option(myOtherGen)</code></li>
             <li class="fragment"><code>Gen.listOf(myOtherGen)</code></li>
           </ul>
@@ -335,8 +358,8 @@ forAll(genInt) { (x:Int) =>
         <section>
           <h2>Gen</h2>
           <pre><code data-trim class="scala">
-val oddGen:Gen[Int] = Gen.choose(0, 1000).suchThat( _ % 2 == 0)
-val anotherOddGen:Gen[Int] = Gen.choose(0, 1000).map(_ + _)
+val evenGen:Gen[Int] = Gen.choose(0, 1000).suchThat( _ % 2 == 0)
+val anotherEvenGen:Gen[Int] = Gen.choose(0, 500).map(_ + _)
           </code></pre>
         </section>
 
@@ -344,9 +367,11 @@ val anotherOddGen:Gen[Int] = Gen.choose(0, 1000).map(_ + _)
           <h2>Gen est monadique</h2>
           <pre><code data-trim class="scala">
 case class User(id:Int, name:String)
+</pre></code>
+          <pre class="fragment"><code data-trim class="scala">
 val genUser:Gen[User] = for {
   id &lt;- Gen.choose(0, Int.MaxValue)
-  name &lt;- Gen.alphaStr
+  name &lt;- Gen.alphaStr.suchThat(_.length > 0)
 } yield User(id, name)
 
 forAll(genUser) { (user:User) =>
@@ -358,10 +383,9 @@ forAll(genUser) { (user:User) =>
         <section>
           <h2>Les arbitrary</h2>
           <pre><code class="scala" data-trim>
-case class User(id:Int, name:String)
 val genUser:Gen[User] = for {
   id &lt;- Gen.choose(0, Int.MaxValue)
-  name &lt;- Gen.alphaStr
+  name &lt;- Gen.alphaStr.suchThat(_.length > 0)
 } yield User(id, name)
 
 implicit val arbUser:Arbitrary[User] = Arbitrary(genUser)
@@ -392,6 +416,7 @@ case class User(id:Int, firstName:String, lastName:String) {
   def name = firstName + " " + lastName
 }
 
+import org.scalacheck.Shapeless._
 forAll((user:User) => {
   user.name.contains(user.firstName)
 })
@@ -407,6 +432,7 @@ case object Mercury extends Planetoid
 case object Venus extends Planetoid
 case class JovianMoon(name:String) extends Planetoid
 
+import org.scalacheck.Shapeless._
 forAll((planetoid:Planetoid) => {
   planetoid.toString().length > 0
 })
@@ -414,13 +440,9 @@ forAll((planetoid:Planetoid) => {
 				</section>
 
         <section>
-          <h2>Limites et mise en garde</h2>
-          TODO IMG PANNEAU ATTENTIOn
-        </section>
-
-        <section>
-          <h2>Ne pas recoder la fonction dans le test</h2>
-          <pre><code data-trim class="scala">
+          <h2>Attention&nbsp;!</h2>
+          <h3 class="fragment">Ne pas recoder la fonction dans le test</h3>
+          <pre class="fragment"><code data-trim class="scala">
 case class User(id:Int, firstName:String, lastName:String) {
   def name = firstName + " " + lastName
 }
@@ -429,51 +451,52 @@ forAll((user:User) => {
   user.name == firstName + " " + lastName
 })
           </code></pre>
-
-        </section>
-
-        <section>
-          <h2>Mise en garde</h2>
-          //Problématique de la répartition des cas de tests
         </section>
 
 
 				<section>
 					<h2>Exemples du vrai monde</h2>
           <pre><code class="scala" data-trim>
-property("serialize and deserialize should be inverse") = forAll { (user: User) =>
-  Json.toJson(user).asOpt[User] == Some(user)
-}
-property("what's saved in database can be retrieved") = forAll { (user:User) =>
-  User.findById(user.save().id) == Some(user)
-}
+property("serialize and deserialize should be inverse") =
+  forAll { (user: User) =>
+    Json.toJson(user).asOpt[User] == Some(user)
+  }
+
+property("what's saved in database can be retrieved") =
+  forAll { (user:User) =>
+    User.save(user).map(_.id).flatMap(User.findById) == Some(user)
+  }
           </code></pre>
 				</section>
 
         <section>
           <h2>Exemples du vrai monde</h2>
           <pre><code class="scala" data-trim>
-property("identity don't modify the functor") = forAll { (response:HttpReponse[String]) =>
-  response.map(identity) == response
-}
-property("functor is associative") = forAll { (response:HttpReponse[String], f1: String => Int, f2:Int => Long) =>
-  response.map(f1).map(f2) == response.map(f1 andThen f2)
-}
+property("identity don't modify the functor") =
+  forAll { (response:HttpReponse[String]) =>
+    response.map(identity) == response
+  }
+property("functor is associative") =
+  forAll { (response:HttpReponse[String],
+            f1: String => Int,
+            f2:Int => Long) =>
+    response.map(f1).map(f2) == response.map(f1 andThen f2)
+  }
           </code></pre>
         </section>
 
         <section>
           <h2>Avec scalaz</h2>
           <pre><code class="scala" data-trim>
-implicit def responseEqual[A]: Equal[HttpResponse[A]] = Equal.equalA
-implicit val responseFunctor = new Functor[HttpResponse] {
-  def map[A, B](fa: HttpResponse[A])(f: A => B): HttpResponse[B] = fa.map(f)
+implicit def respEqual[A]: Equal[HttpResponse[A]] = Equal.equalA
+implicit val respFunctor = new Functor[HttpResponse] {
+  def map[A, B](fa: HttpResponse[A])(f: A => B): HttpResponse[B] =
+    fa.map(f)
 }
 
 functor.laws[HttpResponse].check
           </code></pre>
         </section>
-
 
 				<section>
 					<h2>Dans les autres langages</h2>
