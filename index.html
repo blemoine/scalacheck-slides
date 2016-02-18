@@ -152,9 +152,19 @@
           <span style="float:right"><span>Dijkstra.</span></span>
         </section>
 
+        <section>
+          <h2>Test unitaire (aka tests basé sur l'exemple)</h2>
+          <pre><code data-trim class="scala">
+"add should sum the numbers" in {
+  add(1, 2) shouldBe 3
+  add(123, 0) shouldBe 123
+}
+          </code></pre>
+        </section>
+
 
         <section>
-          <h2>Exemple</h2>
+          <h2>Implémentation respectant le test</h2>
 <pre><code data-trim class="scala">
   def add(x:Int, y:Int):Int = if(x > 0 &amp;&amp; y > 0) {
       x + y
@@ -164,15 +174,7 @@
 </code></pre>
         </section>
 
-        <section>
-          <h2>Test unitaire</h2>
-          <pre><code data-trim class="scala">
-"add should sum the numbers" in {
-  add(1, 2) shouldBe 3
-  add(123, 0) shouldBe 123
-}
-          </code></pre>
-        </section>
+
 
         <section>
           <h2>ScalaCheck</h2>
@@ -297,10 +299,10 @@ property("padded str length should be 10") =forAll {(str: String) =>
           <h2>A quoi ca sert&nbsp;?</h2>
           <ul>
              <li>Tests de propriété algébrique</li>
-             <li>Associativité <code>x ★ (y ★ z) == (x ★ y) ★ z</code></li>
-             <li>Commutativité <code> x ★ y == y ★ x</code></li>
-             <li>Element neutre <code> x ★ e == x</code></li>
-             <li>Element absorbant <code>x ★ e == e</code></li>
+             <li>Associativité <code>myFn(x, myFn(y, z)) == myFn(myFn(x,y), z)</code></li>
+             <li>Commutativité <code> myFn(x, y) == myFn(y, x)</code></li>
+             <li>Element neutre <code> myFn(x, e) == x</code></li>
+             <li>Element absorbant <code>myFn(x, e) == e</code></li>
              <li>etc.</li>
           </ul>
         </section>
