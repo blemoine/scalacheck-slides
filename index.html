@@ -153,7 +153,8 @@
         </section>
 
         <section>
-          <h2>Test unitaire (aka tests basé sur l'exemple)</h2>
+          <h2>Test unitaire</h2>
+          <h3>Tests basés sur l'exemple</h3>
           <pre><code data-trim class="scala">
 "add should sum the numbers" in {
   add(1, 2) shouldBe 3
@@ -166,15 +167,13 @@
         <section>
           <h2>Implémentation respectant le test</h2>
 <pre><code data-trim class="scala">
-  def add(x:Int, y:Int):Int = if(x > 0 &amp;&amp; y > 0) {
-      x + y
-    } else {
-      x - y
-    }
+  def add(x:Int, y:Int):Int = (x, y) match {
+    case (1, 2) => 3
+    case (123, 0) => 123
+    case (_, _) => x
+  }
 </code></pre>
         </section>
-
-
 
         <section>
           <h2>ScalaCheck</h2>
@@ -250,10 +249,9 @@ object AddSpecification extends Properties("add") {
 }
           </code></pre>
           <pre class="fragment" class="bash"><code data-trim>
-! add.0 should be left neutral: Falsified after 3 passed tests.
-[info] > ARG_0: -1
-[info] > ARG_0_ORIGINAL: -1576258449
-
+[info] ! add.0 should be left neutral: Falsified after 0 passed tests.
+[info] > ARG_0: 1
+[info] > ARG_0_ORIGINAL: 256088374
           </code></pre>
         </section>
 
@@ -296,7 +294,7 @@ property("padded str length should be 10") =forAll {(str: String) =>
         </section>
 
         <section>
-          <h2>A quoi ca sert&nbsp;?</h2>
+          <h2>À quoi ça sert&nbsp;?</h2>
           <ul>
              <li>Tests de propriété algébrique</li>
              <li>Associativité <code>myFn(x, myFn(y, z)) == myFn(myFn(x,y), z)</code></li>
@@ -308,8 +306,9 @@ property("padded str length should be 10") =forAll {(str: String) =>
         </section>
 
         <section>
-          <h2>Exemple&nbsp;: List est un Functor</h2>
-          <pre><code>
+          <h2>Exemple</h2>
+          <h3><code>List</code> est un Functor</h3>
+          <pre><code data-trim class="scala">
 property("identity") = forAll {(list: List[Long]) =>
   list.map(identity) == list
 }
