@@ -327,7 +327,7 @@ property("composite") = forAll {(list: List[Long],
           <ul class="fragment">
             <li><code>deserialize(serialize(myObject)) == myObject</code></li>
             <li><code>findById(save(entity)) == entity</code></li>
-            <li><code>compress(input).size < input.size</code></li>
+            <li><code>compress(input).size <= input.size</code></li>
           </ul>
         </section>
 
